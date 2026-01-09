@@ -7,6 +7,9 @@ struct VideoTrimmerView: View {
     @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1) // normalized coordinates - full bounds
     @State private var isFlipped = false
     @State private var rotationAngle: Angle = .zero // rotation angle for video
+    @State private var showAspectRatioOptions = false
+
+    private let aspectRatios = ["1:1", "9:16", "16:9", "3:4"]
     @State private var startCropRect: CGRect? = nil
     let start = Date()
     let trackThumbnailImages: [UIImage]
@@ -211,35 +214,53 @@ struct VideoTrimmerView: View {
                         .foregroundStyle(.yellow)
                 }
                 .buttonStyle(.bordered)
-                HStack {
-                    Button(action: {}) {
-                        Image(systemName: "aspectratio")
-                            .font(.system(size: 21))
-                            .foregroundStyle(.yellow)
+                
+                VStack {
+                    
+                    HStack {
+                        Button(action: { showAspectRatioOptions.toggle() }) {
+                            Image(systemName: "aspectratio")
+                                .font(.system(size: 21))
+                                .foregroundStyle(.yellow)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
+                            Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 38))
+                                .foregroundStyle(.yellow)
+                                .fontWeight(.black)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button(action: { isFlipped.toggle() }) {
+                            Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                                .font(.system(size: 21))
+                                .foregroundStyle(.yellow)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 21))
+                                .foregroundStyle(.yellow)
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.bordered)
-
-                    Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
-                        Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 38))
-                            .foregroundStyle(.yellow)
-                            .fontWeight(.black)
+                    
+                if showAspectRatioOptions {
+                    HStack(spacing: 30) {
+                        ForEach(aspectRatios, id: \.self) { ratio in
+                            Button(action: {}) {
+                                Text(ratio)
+                                    .foregroundStyle(.yellow)
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
-                    .buttonStyle(.bordered)
-
-                    Button(action: { isFlipped.toggle() }) {
-                        Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                            .font(.system(size: 21))
-                            .foregroundStyle(.yellow)
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(action: {}) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 21))
-                            .foregroundStyle(.yellow)
-                    }
-                    .buttonStyle(.bordered)
+                    .padding(.top, 10)
+                }
                 }
             }
         }
