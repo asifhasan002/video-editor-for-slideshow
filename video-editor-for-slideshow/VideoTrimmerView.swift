@@ -52,13 +52,23 @@ struct VideoTrimmerView: View {
             .opacity(0.6)
 
             Spacer()
-            Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
-                Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.yellow)
-                    .fontWeight(.black)
+            
+            HStack {
+                Button(action: {}) {
+                    Image(systemName: "crop")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.yellow)
+                }
+                .buttonStyle(.bordered)
+                
+                Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
+                    Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.yellow)
+                        .fontWeight(.black)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
         }
     }
 }
