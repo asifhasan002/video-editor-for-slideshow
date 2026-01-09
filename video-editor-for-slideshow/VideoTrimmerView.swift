@@ -1,10 +1,3 @@
-//
-//  VideoTrimmerView.swift
-//  video-editor-for-slideshow
-//
-//  Created by Md Asif Hasan on 8/1/26.
-//
-
 import SwiftUI
 import CoreMedia
 
@@ -25,11 +18,23 @@ struct VideoTrimmerView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            ZStack {
-                VideoPlayerView(player: playerController.player)
-                    .aspectRatio(viewModel.aspectRatio, contentMode: .fit)
-                
-                // Always show cropping interface
+            // Outer GeometryReader to get available space and compute fitting sizes
+            GeometryReader { outerGeo in
+                let availSize = outerGeo.size
+                let degrees = rotationAngle.degrees.truncatingRemainder(dividingBy: 360)
+                let absDegrees = abs(degrees)
+                let isSwapped = (absDegrees == 90 || absDegrees == 270)
+                let contentAR = viewModel.aspectRatio
+                let effectiveAR = isSwapped ? 1 / contentAR : contentAR
+                let fitW = min(availSize.width, availSize.height * effectiveAR)
+                let fitH = min(availSize.height, availSize.width / effectiveAR)
+                let innerW = isSwapped ? fitH : fitW
+                let innerH = isSwapped ? fitW : fitH
+
+                ZStack {
+                    VideoPlayerView(player: playerController.player)
+                        // Removed .aspectRatio here; the frame will handle sizing
+
                     // Free form cropping overlay - constrained to video bounds
                     GeometryReader { geometry in
                         ZStack {
@@ -132,9 +137,11 @@ struct VideoTrimmerView: View {
                             }
                         }
                     }
+                }
+                .frame(width: innerW, height: innerH)
+                .rotationEffect(rotationAngle)
+                .position(x: availSize.width / 2, y: availSize.height / 2)
             }
-            .rotationEffect(rotationAngle)
-
 
             TrimTrackView(
                 trackView: ThumbnailTrackView(images: trackThumbnailImages),
@@ -166,6 +173,13 @@ struct VideoTrimmerView: View {
                 Button(action: {
                     // Rotate 90 degrees clockwise
                     rotationAngle += .degrees(90)
+                    // Normalize the angle to prevent potential floating-point or rendering issues with large values
+                    var normalizedDegrees = rotationAngle.degrees.truncatingRemainder(dividingBy: 360)
+                    if normalizedDegrees < 0 {
+                        normalizedDegrees += 360
+                    }
+                    rotationAngle = .degrees(normalizedDegrees)
+                    // Optionally, transform cropRect here if needed to maintain relative crop area
                 }) {
                     Image(systemName: "rotate.right")
                         .font(.system(size: 30))
