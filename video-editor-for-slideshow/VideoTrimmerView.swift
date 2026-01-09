@@ -248,19 +248,49 @@ struct VideoTrimmerView: View {
                         .buttonStyle(.bordered)
                     }
                     
-                if showAspectRatioOptions {
-                    HStack(spacing: 30) {
-                        ForEach(aspectRatios, id: \.self) { ratio in
-                            Button(action: {}) {
-                                Text(ratio)
-                                    .foregroundStyle(.yellow)
-                                    .font(.system(size: 16, weight: .medium))
+                    if showAspectRatioOptions {
+                        HStack(spacing: 30) {
+                            ForEach(aspectRatios, id: \.self) { ratio in
+                                Button(action: {
+                                    let parts = ratio.split(separator: ":")
+                                    guard parts.count == 2,
+                                          let w = Double(String(parts[0])),
+                                          let h = Double(String(parts[1])),
+                                          h != 0 else { return }
+                                    let newAR = w / h
+                                    let degrees = rotationAngle.degrees.truncatingRemainder(dividingBy: 360)
+                                    let absDegrees = abs(degrees)
+                                    let isSwapped = (absDegrees == 90 || absDegrees == 270)
+                                    let videoAR = viewModel.aspectRatio
+                                    let targetCropRatio: Double
+                                    if isSwapped {
+                                        targetCropRatio = 1 / (newAR * videoAR)
+                                    } else {
+                                        targetCropRatio = newAR / videoAR
+                                    }
+                                    var newWidth: CGFloat
+                                    var newHeight: CGFloat
+                                    if targetCropRatio > 1 {
+                                        newWidth = 1.0
+                                        newHeight = 1.0 / CGFloat(targetCropRatio)
+                                    } else {
+                                        newHeight = 1.0
+                                        newWidth = CGFloat(targetCropRatio)
+                                    }
+                                    let newX = (1.0 - newWidth) / 2.0
+                                    let newY = (1.0 - newHeight) / 2.0
+                                    cropRect = CGRect(x: newX, y: newY, width: newWidth, height: newHeight)
+                                    //showAspectRatioOptions = false
+                                }) {
+                                    Text(ratio)
+                                        .foregroundStyle(.yellow)
+                                        .font(.system(size: 16, weight: .medium))
+                                }
+                                .buttonStyle(.bordered)
                             }
-                            .buttonStyle(.bordered)
                         }
+                        .padding(.top, 10)
                     }
-                    .padding(.top, 10)
-                }
                 }
             }
         }
