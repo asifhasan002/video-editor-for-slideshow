@@ -12,6 +12,7 @@ struct VideoTrimmerView: View {
     @State var viewModel: VideoTrimmerViewModel
     @StateObject var playerController: PlayerController
     @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1) // normalized coordinates - full bounds
+    @State private var rotationAngle: Angle = .zero // rotation angle for video
 
     let start = Date()
     let trackThumbnailImages: [UIImage]
@@ -27,7 +28,8 @@ struct VideoTrimmerView: View {
             ZStack {
                 VideoPlayerView(player: playerController.player)
                     .aspectRatio(viewModel.aspectRatio, contentMode: .fit)
-
+                    .rotationEffect(rotationAngle)
+                
                 // Always show cropping interface
                     // Free form cropping overlay - constrained to video bounds
                     GeometryReader { geometry in
@@ -161,7 +163,10 @@ struct VideoTrimmerView: View {
             Spacer()
 
             HStack(spacing: 30) {
-                Button(action: {}) {
+                Button(action: {
+                    // Rotate 90 degrees clockwise
+                    rotationAngle += .degrees(90)
+                }) {
                     Image(systemName: "rotate.right")
                         .font(.system(size: 30))
                         .foregroundStyle(.yellow)
