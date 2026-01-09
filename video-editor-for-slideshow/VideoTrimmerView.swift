@@ -11,8 +11,7 @@ import CoreMedia
 struct VideoTrimmerView: View {
     @State var viewModel: VideoTrimmerViewModel
     @StateObject var playerController: PlayerController
-    @State private var isCropping = false
-    @State private var cropRect = CGRect(x: 0.1, y: 0.2, width: 0.8, height: 0.6) // normalized coordinates
+    @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1) // normalized coordinates - full bounds
 
     let start = Date()
     let trackThumbnailImages: [UIImage]
@@ -29,7 +28,7 @@ struct VideoTrimmerView: View {
                 VideoPlayerView(player: playerController.player)
                     .aspectRatio(viewModel.aspectRatio, contentMode: .fit)
 
-                if isCropping {
+                // Always show cropping interface
                     // Free form cropping overlay - constrained to video bounds
                     GeometryReader { geometry in
                         ZStack {
@@ -132,7 +131,6 @@ struct VideoTrimmerView: View {
                             }
                         }
                     }
-                }
             }
 
 
@@ -162,22 +160,13 @@ struct VideoTrimmerView: View {
 
             Spacer()
             
-            HStack {
-                Button(action: { isCropping.toggle() }) {
-                    Image(systemName: "crop")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.yellow)
-                }
-                .buttonStyle(.bordered)
-                
-                Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
-                    Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.yellow)
-                        .fontWeight(.black)
-                }
-                .buttonStyle(.bordered)
+            Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
+                Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.yellow)
+                    .fontWeight(.black)
             }
+            .buttonStyle(.bordered)
         }
     }
 }
