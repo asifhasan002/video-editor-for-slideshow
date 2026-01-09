@@ -7,16 +7,14 @@ struct VideoTrimmerView: View {
     @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1) // normalized coordinates - full bounds
     @State private var isFlipped = false
     @State private var rotationAngle: Angle = .zero // rotation angle for video
-
+    @State private var startCropRect: CGRect? = nil
     let start = Date()
     let trackThumbnailImages: [UIImage]
-
     init(videoModel: VideoModel) {
         self._playerController = StateObject(wrappedValue: PlayerController(videoModel: videoModel))
         self.viewModel = VideoTrimmerViewModel(aspectRatio: videoModel.aspectRatio)
         self.trackThumbnailImages = videoModel.images
     }
-
     var body: some View {
         VStack(spacing: 10) {
             // Outer GeometryReader to get available space and compute fitting sizes
@@ -31,12 +29,10 @@ struct VideoTrimmerView: View {
                 let fitH = min(availSize.height, availSize.width / effectiveAR)
                 let innerW = isSwapped ? fitH : fitW
                 let innerH = isSwapped ? fitW : fitH
-
                 ZStack {
                     VideoPlayerView(player: playerController.player)
                         .scaleEffect(x: isFlipped ? -1 : 1, y: 1)
                         // Removed .aspectRatio here; the frame will handle sizing
-
                     // Free form cropping overlay - constrained to video bounds
                     GeometryReader { geometry in
                         ZStack {
@@ -45,7 +41,6 @@ struct VideoTrimmerView: View {
                             let videoHeight = min(geometry.size.height, geometry.size.width / viewModel.aspectRatio)
                             let videoX = (geometry.size.width - videoWidth) / 2
                             let videoY = (geometry.size.height - videoHeight) / 2
-
                             // Semi-transparent overlay only within video bounds
                             ZStack {
                                 Color.black.opacity(0.3)
@@ -64,7 +59,6 @@ struct VideoTrimmerView: View {
                             }
                             .frame(width: videoWidth, height: videoHeight)
                             .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-
                             // Crop rectangle within video bounds
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.yellow, lineWidth: 2)
@@ -72,7 +66,29 @@ struct VideoTrimmerView: View {
                                        height: videoHeight * cropRect.height)
                                 .position(x: videoX + videoWidth * (cropRect.minX + cropRect.width/2),
                                          y: videoY + videoHeight * (cropRect.minY + cropRect.height/2))
-
+                            Rectangle()
+                                .fill(Color.clear)
+                                .contentShape(Rectangle()) // Ensures the entire area is tappable/draggable
+                                .frame(width: videoWidth * cropRect.width, height: videoHeight * cropRect.height)
+                                .position(x: videoX + videoWidth * (cropRect.minX + cropRect.width/2), y: videoY + videoHeight * (cropRect.minY + cropRect.height/2))
+                                .gesture(
+                                    DragGesture()
+                                        .onChanged { value in
+                                            if startCropRect == nil {
+                                                startCropRect = cropRect
+                                            }
+                                            let deltaX = value.translation.width / videoWidth
+                                            let deltaY = value.translation.height / videoHeight
+                                            let newX = startCropRect!.minX + deltaX
+                                            let newY = startCropRect!.minY + deltaY
+                                            let clampedX = max(0, min(newX, 1 - cropRect.width))
+                                            let clampedY = max(0, min(newY, 1 - cropRect.height))
+                                            cropRect = CGRect(x: clampedX, y: clampedY, width: cropRect.width, height: cropRect.height)
+                                        }
+                                        .onEnded { _ in
+                                            startCropRect = nil
+                                        }
+                                )
                             // Corner handles with drag gestures
                             Group {
                                 // Top-left handle
@@ -93,7 +109,6 @@ struct VideoTrimmerView: View {
                                                                 height: cropRect.maxY - newY)
                                             }
                                     )
-
                                 // Top-right handle
                                 Circle()
                                     .fill(Color.yellow)
@@ -112,7 +127,6 @@ struct VideoTrimmerView: View {
                                                                 height: cropRect.maxY - newY)
                                             }
                                     )
-
                                 // Bottom-left handle
                                 Circle()
                                     .fill(Color.yellow)
@@ -131,7 +145,6 @@ struct VideoTrimmerView: View {
                                                                 height: newY - cropRect.minY)
                                             }
                                     )
-
                                 // Bottom-right handle
                                 Circle()
                                     .fill(Color.yellow)
@@ -158,7 +171,6 @@ struct VideoTrimmerView: View {
                 .rotationEffect(rotationAngle)
                 .position(x: availSize.width / 2, y: availSize.height / 2)
             }
-
             TrimTrackView(
                 trackView: ThumbnailTrackView(images: trackThumbnailImages),
                 viewModel: TrimTrackViewModel(
@@ -169,7 +181,6 @@ struct VideoTrimmerView: View {
                 playerController: playerController
             )
             .frame(height: 50)
-
             HStack {
                 Text("L: \(playerController.trimValues.lowerBound.seconds, specifier: "%.2f")")
                     .padding(.leading, 10)
@@ -182,9 +193,7 @@ struct VideoTrimmerView: View {
                     .padding(.trailing, 10)
             }
             .opacity(0.6)
-
             Spacer()
-
             HStack(spacing: 30) {
                 Button(action: {
                     // Rotate 90 degrees clockwise
@@ -202,30 +211,27 @@ struct VideoTrimmerView: View {
                         .foregroundStyle(.yellow)
                 }
                 .buttonStyle(.bordered)
-
-            HStack {
-                Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
-                    Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.yellow)
-                        .fontWeight(.black)
+                HStack {
+                    Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
+                        Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.yellow)
+                            .fontWeight(.black)
+                    }
+                    .buttonStyle(.bordered)
+                    Button(action: { isFlipped.toggle() }) {
+                        Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                            .font(.system(size: 30))
+                            .foregroundStyle(.yellow)
+                    }
+                    .buttonStyle(.bordered)
+                    Button(action: {}) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 30))
+                            .foregroundStyle(.yellow)
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
-
-                Button(action: { isFlipped.toggle() }) {
-                    Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.yellow)
-                }
-                .buttonStyle(.bordered)
-
-                Button(action: {}) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 30))
-                        .foregroundStyle(.yellow)
-                }
-                .buttonStyle(.bordered)
-            }
             }
         }
     }
