@@ -5,6 +5,7 @@ struct VideoTrimmerView: View {
     @State var viewModel: VideoTrimmerViewModel
     @StateObject var playerController: PlayerController
     @State private var cropRect = CGRect(x: 0, y: 0, width: 1, height: 1) // normalized coordinates - full bounds
+    @State private var isFlipped = false
     @State private var rotationAngle: Angle = .zero // rotation angle for video
 
     let start = Date()
@@ -33,6 +34,7 @@ struct VideoTrimmerView: View {
 
                 ZStack {
                     VideoPlayerView(player: playerController.player)
+                        .scaleEffect(x: isFlipped ? -1 : 1, y: 1)
                         // Removed .aspectRatio here; the frame will handle sizing
 
                     // Free form cropping overlay - constrained to video bounds
@@ -196,7 +198,7 @@ struct VideoTrimmerView: View {
                 }
                 .buttonStyle(.bordered)
 
-                Button(action: {}) {
+                Button(action: { isFlipped.toggle() }) {
                     Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
                         .font(.system(size: 30))
                         .foregroundStyle(.yellow)
