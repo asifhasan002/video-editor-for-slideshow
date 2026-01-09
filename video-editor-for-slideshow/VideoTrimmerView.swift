@@ -187,6 +187,7 @@ struct VideoTrimmerView: View {
                 }
                 .buttonStyle(.bordered)
 
+            HStack {
                 Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
                     Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 60))
@@ -194,6 +195,14 @@ struct VideoTrimmerView: View {
                         .fontWeight(.black)
                 }
                 .buttonStyle(.bordered)
+
+                Button(action: {}) {
+                    Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.yellow)
+                }
+                .buttonStyle(.bordered)
+            }
             }
         }
     }
