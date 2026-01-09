@@ -47,9 +47,23 @@ struct VideoTrimmerView: View {
                             let videoY = (geometry.size.height - videoHeight) / 2
 
                             // Semi-transparent overlay only within video bounds
-                            Color.black.opacity(0.3)
-                                .frame(width: videoWidth, height: videoHeight)
-                                .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                            ZStack {
+                                Color.black.opacity(0.3)
+                                    .frame(width: videoWidth, height: videoHeight)
+                                    .mask(
+                                        Rectangle()
+                                            .overlay(
+                                                Rectangle()
+                                                    .frame(width: videoWidth * cropRect.width,
+                                                           height: videoHeight * cropRect.height)
+                                                    .offset(x: videoWidth * (cropRect.minX + cropRect.width/2 - 0.5),
+                                                           y: videoHeight * (cropRect.minY + cropRect.height/2 - 0.5))
+                                                    .blendMode(.destinationOut)
+                                            )
+                                    )
+                            }
+                            .frame(width: videoWidth, height: videoHeight)
+                            .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
 
                             // Crop rectangle within video bounds
                             RoundedRectangle(cornerRadius: 8)
