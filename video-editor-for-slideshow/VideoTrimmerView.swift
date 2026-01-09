@@ -204,6 +204,13 @@ struct VideoTrimmerView: View {
                         .foregroundStyle(.yellow)
                 }
                 .buttonStyle(.bordered)
+
+                Button(action: {}) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.yellow)
+                }
+                .buttonStyle(.bordered)
             }
             }
         }
