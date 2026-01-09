@@ -28,7 +28,6 @@ struct VideoTrimmerView: View {
             ZStack {
                 VideoPlayerView(player: playerController.player)
                     .aspectRatio(viewModel.aspectRatio, contentMode: .fit)
-                    .rotationEffect(rotationAngle)
                 
                 // Always show cropping interface
                     // Free form cropping overlay - constrained to video bounds
@@ -134,6 +133,7 @@ struct VideoTrimmerView: View {
                         }
                     }
             }
+            .rotationEffect(rotationAngle)
 
 
             TrimTrackView(
