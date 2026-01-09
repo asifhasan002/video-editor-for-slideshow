@@ -212,22 +212,31 @@ struct VideoTrimmerView: View {
                 }
                 .buttonStyle(.bordered)
                 HStack {
+                    Button(action: {}) {
+                        Image(systemName: "aspectratio")
+                            .font(.system(size: 21))
+                            .foregroundStyle(.yellow)
+                    }
+                    .buttonStyle(.bordered)
+
                     Button(action: { @MainActor in playerController.isPlaying ? playerController.pause() : playerController.play() }) {
                         Image(systemName: playerController.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 60))
+                            .font(.system(size: 38))
                             .foregroundStyle(.yellow)
                             .fontWeight(.black)
                     }
                     .buttonStyle(.bordered)
+
                     Button(action: { isFlipped.toggle() }) {
                         Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                            .font(.system(size: 30))
+                            .font(.system(size: 21))
                             .foregroundStyle(.yellow)
                     }
                     .buttonStyle(.bordered)
+
                     Button(action: {}) {
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 30))
+                            .font(.system(size: 21))
                             .foregroundStyle(.yellow)
                     }
                     .buttonStyle(.bordered)
